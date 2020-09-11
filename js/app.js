@@ -13,16 +13,16 @@ db.collection("User").get().then((querySnapshot) => {
 });
 
 // //get where 
-// db.collection("User").where("userid","==",2)
-// .get()
-// .then((querySnapshot) => {
-//     querySnapshot.forEach((doc) => {
-//         console.log(doc.data());
-//     });
-// })
-// .catch(function(error) {
-//     console.log("Error getting documents: ", error);
-// });
+db.collection("User").where("userid","==",2)
+.get()
+.then((querySnapshot) => {
+    querySnapshot.forEach((doc) => {
+        console.log(doc.data());
+    });
+})
+.catch(function(error) {
+    console.log("Error getting documents: ", error);
+});
 
 insertuser = () =>
     {
