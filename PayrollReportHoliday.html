@@ -1,0 +1,382 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+  <!-- Bootstrap CSS
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+ -->
+ <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> -->
+ <link rel="stylesheet" type="text/css" href="../css/style.css" />
+ <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="jquery-2.1.4.js"></script>
+  <script lang="javascript" src="sheetjs-master\dist\xlsx.full.min.js"></script>
+  <script lang="javascript" src="sheetjs-master\dist\FileSaver.min.js"></script>
+  <script type="text/javascript" src="./js/cookiejs.js"></script>
+
+  <title>Payroll Report</title>
+</head>
+<style>
+  .form-controlIn {width: 100%;margin-bottom: 3px;}
+  .row {margin-left:5px;}
+  label {margin-right: 0px;}
+  .form-group {
+    margin-bottom: 0rem;
+  }
+</style>
+<body>
+ 
+  <div id="app" class="container" style="margin-top:10px;margin-left: 10px;">
+    <!-- KMMobile/dist/img/logo.png -->
+      
+        <img src="../Images/logo.png" class="logosl">
+     
+      <div class="form-group row" style="margin-bottom: 3px" >
+        <div class="col-12">
+          <h3>รายงานค่าพักร้อนประจำปี</h3>
+        </div>
+      </div>
+        <div class="form-group row" style="margin-bottom: 3px" >
+          <div class="col-12">
+            <h5>สาขา : {{  branchid }}</h5>
+          </div>
+        </div>
+        <div class="form-group row" style="margin-bottom: 3px" >
+          <div class="col-1">
+            <label >จาก</label>
+          </div>
+          <div class="col-5">
+            <input type="date" id="datePicker" name="Fday" max="3000-12-31"  v-model="dateFrom"
+                  min="1000-01-01" class="form-controlIn form-control-sm">
+          </div>
+          <div class="col-1">
+          <label >ถึง</label>
+          </div>
+          <div class="col-5">
+            <input type="date" name="Tday" min="1000-01-01"  v-model="dateTo" 
+                  max="3000-12-31" class="form-controlIn form-control-sm">
+          </div>
+        </div>
+        <div class="form-group row">
+          <div class="col-1">
+            <label>ฝ่าย</label>
+          </div>
+          <div class="col-11">
+            <select v-model="selected" @change="onChangeFaction($event)" class="form-controlIn form-control-sm" :disabled="!factions.length">
+            <option v-for="(item, key) in factions" :value="item.TB_Faction_Id">
+              {{item.TB_Faction_Name}}
+            </option>
+          </select>
+        </div>
+        </div>
+        <div class="form-group row">
+          <div class="col-1">
+            <label>แผนก</label>
+          </div>  
+          <div class="col-11">
+            <select v-model="selected_Section" @change="onChangeSection($event)" class="form-controlIn form-control-sm" :disabled="!sections.length">
+              <option v-for="(item, key) in sections" :value="item.TB_Section_Id">
+                {{item.TB_Section_Name}}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group row">
+          <div class="col-1">
+            <label>ตำแหน่ง</label>
+          </div>
+          <div class="col-9">
+            <select v-model="selected_Position" class="form-controlIn form-control-sm" :disabled="!Positions.length">
+              <option v-for="(item, key) in Positions" :value="item.TB_Position_Id">
+                {{item.TB_Position_Name}}
+              </option>
+            </select>
+          </div>
+          <div class="col-2">
+            <button v-on:click="search" class="btn btn-primary btn-sm" type="submit" value="Search">
+              <template v-if="loading">
+              <span class="spinner-grow spinner-grow-sm" disabled="true" hide></span>
+            </template>
+               Search
+            </button>
+            <button  class="btn btn-primary btn-sm"  v-on:click="csvExport(datagrid)">Export</button>
+         </div>
+        </div>
+        <table class="table">
+          <thead>
+          <tr>
+            <th v-for="key in gridColumns" scope="col">
+              {{key}}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <template v-for="names, i in byFullname">
+            <tr v-for="name in names">
+              <td></td>
+              <td>{{name.Date}}</td>
+              <td>{{name.DayCount}}</td>
+              <td>{{name.Amount}}</td>
+            </tr>
+            <tr class="thead-light" style="border-bottom: 3px solid #c7c7c7;font-weight: bold;">
+              <td>{{i}}</td>
+              <td>TOTAL</td>
+              <td>{{GtotalDays(byFullname[i])}}</td>
+              <td>{{GtotalAmount(byFullname[i])}}</td>
+            </tr>
+          </template> 
+          </tbody>
+          <tfoot>
+            <tr class="thead-light" style="border-bottom: 3px solid #c7c7c7;font-weight: bold;">
+              <td colspan="2" style="text-align: center;">GTOTAL</td>
+              <td>{{totalDay}}</td>
+              <td>{{totalAmount}}</td>
+            </tr>   
+          </tfoot>
+        </table>
+      <br>
+  </div>
+  
+   <script>
+     $(function () {
+      Vue.config.devtools = true;
+       app =  new Vue
+       (
+         {
+              el: '#app',
+              data: 
+              {
+                loading:false,
+                searchdata: null,
+                column: null,
+                branchid:0,
+                searchQuery: "",
+                dateFrom:'',
+                dateTo:'',
+                  selected: '',
+                  selected_Section:'',
+                  selected_Position:'',
+                  factions: [],
+                  sections: [],
+                  Positions: [],
+                  gridColumns: ["FullName","Date","DayCount","Amount"],
+                  datagrid : [],
+                  apilink:"https://192.2.1.5:8001/api/"
+              }
+              ,
+            methods: {
+              csvExport(arrData) {
+                if(arrData.length)
+                {
+                  function sheet_to_workbook(sheet/*:Worksheet*/, opts)/*:Workbook*/ {
+                    var n = opts && opts.sheet ? opts.sheet : "Sheet1";
+                    var sheets = {}; sheets[n] = sheet;
+                    return { SheetNames: [n], Sheets: sheets };
+                  }
+
+                  function aoa_to_workbook(data/*:Array<Array<any> >*/, opts)/*:Workbook*/ {
+                    return sheet_to_workbook(XLSX.utils.aoa_to_sheet(data, opts), opts);
+                  }
+
+                  const tempBody = arrData.map(item => 
+                    {
+                          return Object.values({
+                            FullName:item.FullName,
+                            Date: convertdateToddMMyyyy(this.parseJsonDate(item.Date)),
+                            DayCount: item.DayCount,
+                            Amount: item.Amount
+                        }
+                      )
+                    }
+                  )
+
+                  tempBody.unshift(this.gridColumns)
+                  
+                  var wb = aoa_to_workbook(
+                    tempBody
+                  ); // wb will be a workbook with one sheet aligning with the data
+                    XLSX.writeFile(wb, "test.xlsx"); // save to test.xlsx
+                  // let csvContent = "data:text/csv;charset=utf-8,";
+                  // csvContent += [
+                  //   Object.values(this.gridColumns),
+                  //   ...arrData.map(item => 
+                  //   Object.values({
+                  //     FullName:item.FullName,
+                  //     Date: this.convertdateToddMMyyyy(this.parseJsonDate(item.Date)),
+                  //     DayCount: item.DayCount,
+                  //     Amount: item.Amount
+                  //     }).join(",")
+                  //   )
+                  // ]
+                  //   .join("\n")
+                  //   .replace(/(^\[)|(\]$)/gm, "");
+
+
+                  // const data = encodeURI(csvContent);
+                  // const link = document.createElement("a");
+                  // link.setAttribute("href", data);
+                  // link.setAttribute("download", "export.csv");
+                  // link.click();
+                }
+                else
+                alert("กรุณาค้นหาก่อน export xlsx")
+                },
+                onChangeFaction(event) {
+                  axios
+                    .get(this.apilink + 'payrollreport/GetSection?TB_Faction_Id=' + event.target.value + "&branchid=" + this.branchid)
+                    .then(response => {
+                      const sectionblank =  [
+                      {
+                        TB_Section_Id:0,
+                        TB_Section_Name:" "
+                      }
+                    ]
+                  this.sections = JSON.parse(response.data)
+                  this.sections.unshift(sectionblank[0])
+                  })
+                  this.selected_Section = 0
+                  this.selected_Position=0
+                },
+                onChangeSection(event) {
+                  axios
+                    .get(this.apilink + 'payrollreport/GetPosition?TB_Section_Id=' + event.target.value  + "&branchid=" + this.branchid)
+                    .then(response => {
+                      const positionsblank =  [
+                      {
+                        TB_Position_Id:0,
+                        TB_Position_Name:" "
+                      }
+                    ]
+                  this.Positions = JSON.parse(response.data)
+                  this.Positions.unshift(positionsblank[0])
+                    })
+                  this.selected_Position=0
+                },
+                GtotalDays :function(arraymain)
+                {
+                   //console.log(arraymain)
+                  // return 99;
+                  return arraymain.reduce((sum, obeject) => {
+                    return sum + obeject.DayCount
+                }, 0)
+                },
+                GtotalAmount :function(arraymain)
+                {
+                   //console.log(arraymain)
+                  // return 99;
+                  return arraymain.reduce((sum, obeject) => {
+                  
+                    return sum + obeject.Amount
+                }, 0)
+                },
+                search :function(event)
+                {
+                  
+                  if(this.selected!=="")
+                  {
+                    this.loading=true
+                  axios
+                    .get(this.apilink + 'payrollReport/ReportReportStatHoliday?dFrom=' + this.dateFrom + 
+                    "&dTo=" + this.dateTo + "&FactionId=" +  this.selected + "&SectionId=" + this.selected_Section + "&PositionId=" + this.selected_Position  + "&branchid=" + this.branchid
+                    )
+                    .then(response => {
+                      this.datagrid = JSON.parse(response.data)
+                     }
+                    )
+                    .finally(() => (this.loading=false)) //when the requests finish
+                    
+                  }
+                  else
+                  alert("กรุณาเลือกฝ่ายก่อนค้นหา")
+                },
+                parseJsonDate :function (jsonDateString){
+                    return new Date(parseInt(jsonDateString.replace('/Date(', '')));
+                },
+            },
+            computed:{
+              // names () {
+              //    if (!this.datagrid.length) {
+              //      return []
+              //    }
+                  
+              //    return this.datagrid.filter(item => {
+              //      let props = Object.values(item) //(this.searchdata && this.column) ? [item[this.column]] : Object.values(item)
+              //      return props.some(prop => !this.searchdata || ((typeof prop === 'string') ? prop.includes(this.searchdata) : prop.toString(10).includes(this.searchdata)))
+              //    })
+              //  },
+              byFullname(){
+                return this.datagrid.reduce((acc, user) => {
+                  (acc[user.FullName] = acc[user.FullName] || []).push({
+                    Date : convertdateToddMMyyyy(this.parseJsonDate(user.Date)) ,
+                    DayCount: user.DayCount ,
+                    Amount: user.Amount
+                })
+                  return acc
+                }, {})
+              },
+              totalDay: function() {
+                  if (!this.datagrid) {
+                      return 0;
+                  }
+
+                  return this.datagrid.reduce(function (total, user) {
+                      return total + Number(user.DayCount);
+                  }, 0);
+              },
+              totalAmount: function()
+              {
+                if (!this.datagrid) {
+                      return 0;
+                  }
+
+                  return this.datagrid.reduce(function (total, user) {
+                      return total + Number(user.Amount);
+                  }, 0);
+              }
+              },
+          mounted () 
+            {
+              // Assuming "?post=1234&action=edit"
+              this.branchid=getCookie("Branch");
+              //this.branchid="bj2"
+              // console.log(urlParams.has('post')); // true
+              // console.log(urlParams.get('branch')); // "edit"
+
+              axios
+                .get(this.apilink + 'payrollreport/GetFaction?branchid=' + this.branchid)
+                .then(response => {
+                  const factionblank =  [
+                    {
+                      TB_Faction_Id:0,
+                      TB_Faction_Name:" "
+                    }
+                  ]
+                this.factions = JSON.parse(response.data)
+                this.factions.unshift(factionblank[0])
+                //console.log(this.factions)
+                }
+              )
+
+              
+        
+              // this.factions.unshift(actionblank)
+              //console.log(this.convertdateToddMMyyyy(Date.now()))
+              const date = new Date();
+              date.setDate(date.getDate() - 20);
+              this.dateFrom = convertdateToyyyymmdd(date);
+              this.dateTo = convertdateToyyyymmdd(Date.now());
+            }
+        }
+      )
+    })
+    </script>
+ <!-- https://stackoverflow.com/questions/54393321/filter-table-rows-with-vue -->
+</body>
+</html>

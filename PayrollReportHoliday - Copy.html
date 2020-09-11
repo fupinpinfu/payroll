@@ -1,0 +1,300 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+
+  <title>Payroll Report</title>
+  <script src="https://unpkg.com/vue"></script>
+    <link rel="stylesheet" type="text/css" href="../css/style.css" />
+
+    <!-- component template -->
+    <script type="text/x-template" id="grid-template">
+      <table>
+        <thead>
+          <tr>
+            <th v-for="key in columns"
+              @click="sortBy(key)"
+              :class="{ active: sortKey == key }">
+              {{ key | capitalize }}
+              <span class="arrow" :class="sortOrders[key] > 0 ? 'asc' : 'dsc'">
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="entry in filteredHeroes">
+            <td v-for="key in columns">
+              {{entry[key]}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </script>
+</head>
+<style>
+  .form-controlIn {width: 100%;margin-bottom: 3px;}
+  .row {margin-left:5px;}
+  label {margin-right: 0px;}
+  .form-group {
+    margin-bottom: 0rem;
+  }
+</style>
+<body>
+  <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+   
+  <div id="app" class="container" style="margin-top:10px;margin-left: 10px;">
+
+        <div class="form-group row" style="margin-bottom: 3px">
+          <div class="col-1">
+            <label >จาก</label>
+          </div>
+          <div class="col-5">
+            <input type="date" id="datePicker" name="Fday" max="3000-12-31"  v-model="dateFrom"
+                  min="1000-01-01" class="form-controlIn form-control-sm">
+          </div>
+          <div class="col-1">
+          <label >ถึง</label>
+          </div>
+          <div class="col-5">
+            <input type="date" name="Tday" min="1000-01-01"  v-model="dateTo" 
+                  max="3000-12-31" class="form-controlIn form-control-sm">
+          </div>
+        </div>
+        <div class="form-group row">
+          <div class="col-1">
+            <label>ฝ่าย</label>
+          </div>
+          <div class="col-11">
+            <select v-model="selected" @change="onChangeFaction($event)" class="form-controlIn form-control-sm" required>
+            <option v-for="(item, key) in factions" :value="item.TB_Faction_Id">
+              {{item.TB_Faction_Name}}
+            </option>
+          </select>
+        </div>
+        </div>
+        <div class="form-group row">
+          <div class="col-1">
+            <label>แผนก</label>
+          </div>  
+          <div class="col-11">
+            <select v-model="selected_Section" @change="onChangeSection($event)" class="form-controlIn form-control-sm">
+              <option v-for="(item, key) in sections" :value="item.TB_Section_Id">
+                {{item.TB_Section_Name}}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group row">
+          <div class="col-1">
+            <label>ตำแหน่ง</label>
+          </div>
+          <div class="col-10">
+            <select v-model="selected_Position" class="form-controlIn form-control-sm">
+              <option v-for="(item, key) in Positions" :value="item.TB_Position_Id">
+                {{item.TB_Position_Name}}
+              </option>
+            </select>
+          </div>
+          <div class="col-1">
+            <input v-on:click="search" class="btn btn-primary mb-2" type="submit" value="Search">
+          </div>
+        </div>
+      <demo-grid style="width: 100%;border-collapse: unset;"
+        :heroes="datagrid"
+        :columns="gridColumns"
+        :filter-key="searchQuery"
+      >
+      </demo-grid>
+      <br>
+      <!-- {{ datagrid }} -->
+     <!-- <span>Selected: {{ selected }}</span>-->
+    
+  </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+   <script>
+       Vue.config.devtools = true
+       Vue.component("demo-grid", {
+        template: "#grid-template",
+        props: {
+          heroes: Array,
+          columns: Array,
+          filterKey: String
+        },
+        data: function() {
+          var sortOrders = {};
+          this.columns.forEach(function(key) {
+            sortOrders[key] = 1;
+          });
+          return {
+            sortKey: "",
+            sortOrders: sortOrders
+          };
+        },
+        computed: {
+          filteredHeroes: function() {
+            var sortKey = this.sortKey;
+            var filterKey = this.filterKey && this.filterKey.toLowerCase();
+            var order = this.sortOrders[sortKey] || 1;
+            var heroes = this.heroes;
+            if (filterKey) {
+              heroes = heroes.filter(function(row) {
+                return Object.keys(row).some(function(key) {
+                  return (
+                    String(row[key])
+                      .toLowerCase()
+                      .indexOf(filterKey) > -1
+                  );
+                });
+              });
+            }
+            if (sortKey) {
+              heroes = heroes.slice().sort(function(a, b) {
+                a = a[sortKey];
+                b = b[sortKey];
+                return (a === b ? 0 : a > b ? 1 : -1) * order;
+              });
+            }
+            return heroes;
+          }
+        },
+        filters: {
+          capitalize: function(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+          }
+        },
+        methods: {
+          sortBy: function(key) {
+            this.sortKey = key;
+            this.sortOrders[key] = this.sortOrders[key] * -1;
+          }
+        }
+      });
+
+       app =  new Vue
+       (
+         {
+              el: '#app',
+              data: 
+              {
+                searchQuery: "",
+                dateFrom:'',
+                dateTo:'',
+                  selected: '',
+                  selected_Section:'',
+                  selected_Position:'',
+                  factions: [],
+                  sections: [],
+                  Positions: [],
+                  gridColumns: ["Date", "FullName","DayCount","Amount"],
+                  datagrid : []
+              }
+              ,
+            methods: {
+                onChangeFaction(event) {
+                  axios
+                    .get('http://192.2.1.5:8001/api/payrollreport/GetSection?TB_Faction_Id=' + event.target.value)
+                    .then(response => {
+                    
+                  this.sections = JSON.parse(response.data)
+                  })
+                  this.selected_Section = 0
+                  this.selected_Position=0
+                },
+                onChangeSection(event) {
+                  axios
+                    .get('http://192.2.1.5:8001/api/payrollreport/GetPosition?TB_Section_Id=' + event.target.value)
+                    .then(response => (
+                  this.Positions = JSON.parse(response.data)
+                  ))
+                  this.selected_Position=0
+                },
+                search :function(event)
+                {
+                  axios
+                    .get('http://192.2.1.5:8001/api/payrollReport/ReportReportStatHoliday?dFrom=' + this.dateFrom + 
+                    "&dTo=" + this.dateTo + "&FactionId=" +  this.selected + "&SectionId=" + this.selected_Section + "&PositionId=" + this.selected_Position
+                    )
+                    .then(response => {
+                      this.datagrid = JSON.parse(response.data)
+                      var Fullname = ""
+                      var Total = ""
+                      Object.keys(this.datagrid).forEach(item => 
+                      {
+                        this.datagrid[item]["Date"] = this.convertdateToddMMyyyy(this.parseJsonDate(this.datagrid[item]["Date"]))
+
+                        // if (Fullname == this.datagrid[item]["FullName"])
+                        // {
+                        //   Total += this.datagrid[item]["Amount"]
+                        // }
+                        // else
+                        // {
+                        //   Vue.set()
+                        //   this.datagrid.json.push("","Total","",Total)
+                        //   Total = 0
+                        // }
+                        // Fullname = this.datagrid[item]["FullName"]
+                      })
+                    }
+                    )
+                },
+                convertdateToddMMyyyy :function(dDate)
+                {
+                  var today = new Date(dDate);
+                  var dd = String(today.getDate()).padStart(2, '0');
+                  var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+                  var yyyy = today.getFullYear();
+
+                  today = dd + '/' + mm + '/' + yyyy;
+
+                  return today;
+                },
+                convertdateToyyyymmdd :function(dDate)
+                {
+                  var today = new Date(dDate);
+                  var dd = String(today.getDate()).padStart(2, '0');
+                  var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+                  var yyyy = today.getFullYear();
+
+                  today = yyyy + '-' + mm + '-' + dd;
+
+                  return today;
+                },
+                parseJsonDate :function (jsonDateString){
+                    return new Date(parseInt(jsonDateString.replace('/Date(', '')));
+                }
+            },
+          mounted () 
+            {
+              axios
+                .get('http://192.2.1.5:8001/api/payrollreport')
+                .then(response => (
+                this.factions = JSON.parse(response.data)
+                )
+              )
+              //console.log(this.convertdateToddMMyyyy(Date.now()))
+              const date = new Date();
+              date.setDate(date.getDate() - 20);
+              this.dateFrom = this.convertdateToyyyymmdd(date);
+              this.dateTo = this.convertdateToyyyymmdd(Date.now());
+            }
+        }
+      )
+    </script>
+</body>
+</html>
