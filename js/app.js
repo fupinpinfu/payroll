@@ -24,7 +24,7 @@ db.collection("User").where("userid","==",2)
     console.log("Error getting documents: ", error);
 });
 
-insertuser = () =>
+loginfunction = () =>
     {
         db.collection("User").where("Username","==",document.getElementById("username").value).where("Userpassword", "==",document.getElementById("password").value)
         .get()
