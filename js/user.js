@@ -38,8 +38,27 @@ loginfunction = () =>
         },document.getElementById("lblshow").innerHTML = "User name or password invalid...")
         .catch(function(error) {
             console.log("Error getting documents: ", error);
-        });
+        })
+        //.finally(() => (this.loading=false)) //when the requests finish
+        ;
     }
 
-
+userexist = (_name,_username) =>
+{
+    db.collection("User").where("Username","==",_username)
+        .get()
+        .then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                return true;
+                //document.getElementById("username").value = doc.data().Username;
+                //document.getElementById("lblshow").innerHTML =  doc.data().Name;
+                // console.log(doc.data().Username);
+            });
+        },false)
+        .catch(function(error) {
+            console.log("Error getting documents: ", error);
+        })
+        //.finally(() => (this.loading=false)) //when the requests finish
+        ;
+}
 //https://firebase.google.com/docs/firestore/quickstart#web_4
