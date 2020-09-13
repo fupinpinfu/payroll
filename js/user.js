@@ -2,27 +2,27 @@
 const db = firebase.firestore();
 // console.log(db.collection('User'))
 
-//get all
-db.collection("User").get().then((querySnapshot) => {
-    querySnapshot.forEach((doc) => {
-        console.log(doc.data());
-    });
-})
-.catch(function(error) {
-    console.log("Error getting documents: ", error);
-});
+// //get all
+// db.collection("User").get().then((querySnapshot) => {
+//     querySnapshot.forEach((doc) => {
+//         console.log(doc.data());
+//     });
+// })
+// .catch(function(error) {
+//     console.log("Error getting documents: ", error);
+// });
 
-// //get where 
-db.collection("User").where("userid","==",2)
-.get()
-.then((querySnapshot) => {
-    querySnapshot.forEach((doc) => {
-        console.log(doc.data());
-    });
-})
-.catch(function(error) {
-    console.log("Error getting documents: ", error);
-});
+// // //get where 
+// db.collection("User").where("userid","==",2)
+// .get()
+// .then((querySnapshot) => {
+//     querySnapshot.forEach((doc) => {
+//         console.log(doc.data());
+//     });
+// })
+// .catch(function(error) {
+//     console.log("Error getting documents: ", error);
+// });
 
 loginfunction = () =>
     {
@@ -45,16 +45,13 @@ loginfunction = () =>
 
 userexist = (_name,_username) =>
 {
-    db.collection("User").where("Username","==",_username)
+    return db.collection("User").where("Username","==",_username)
         .get()
         .then((querySnapshot) => {
             querySnapshot.forEach((doc) => {
-                return true;
-                //document.getElementById("username").value = doc.data().Username;
-                //document.getElementById("lblshow").innerHTML =  doc.data().Name;
-                // console.log(doc.data().Username);
-            });
-        },false)
+              return doc.Username == _username
+            }); 
+        })
         .catch(function(error) {
             console.log("Error getting documents: ", error);
         })

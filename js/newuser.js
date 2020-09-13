@@ -1,5 +1,3 @@
-const db = firebase.firestore();
-
 password_is_ok = () =>
 {
     if(document.getElementById("passwordconfirm").value != document.getElementById("password").value)
@@ -9,8 +7,11 @@ password_is_ok = () =>
     }
     else
     {
-        
-        return true;
+        if (userexist(document.getElementById("fullname").value,document.getElementById("username").value))
+            alert("User already.please check")
+        else
+        console.log("aa");
+            //goto login page first.
 
     }
 }
