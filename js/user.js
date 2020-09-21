@@ -46,21 +46,20 @@ loginfunction = () =>
 
 function userexist(_name,_username)
 {
-    var pass;
+    console.log("111")
     db.collection("User").where("Username","==",_username)
         .get()
         .then((querySnapshot) => {
             querySnapshot.forEach((doc) => {
-                //console.log(doc.data().Username)
-                pass = doc.data().Username
+                console.log(doc.data().Username)
+                //doc.data().Username
             }); 
         })
         .catch(function(error) {
             console.log("Error getting documents: ", error);
         })
         .finally(() => {
-            console.log("finally : " + pass)
-            return pass;
+            console.log("finally")
         }
             ) //when the requests finish
         ;

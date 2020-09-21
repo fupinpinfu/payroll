@@ -1,14 +1,23 @@
-function foo(){
-    return new Promise( (resolve, reject) => { // I want foo() to PROMISE me something
-     setTimeout ( function(){ 
-       // promise is RESOLVED , when execution reaches this line of code
-        resolve('wohoo')// After 1 second, RESOLVE the promise with value 'wohoo'
-     } )
-   })
- }
- 
- let bar ; 
- foo().then( res => {
-  bar = res;
-  console.log(bar) // will print 'wohoo'
- });
+const db = firebase.firestore();
+function userexist(_username)
+{
+    var pass;
+    return db.collection("User").where("Username","==",_username)
+        .get()
+        .then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                console.log(doc.data().Username)
+                pass = doc.data().Username
+            }); 
+        })
+        .catch(function(error) {
+            console.log("Error getting documents: ", error);
+        })
+        .finally(() => {
+            console.log("finally : " + pass)
+            return pass;
+        }
+            ) //when the requests finish
+        ;
+       
+}
