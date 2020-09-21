@@ -43,19 +43,49 @@ loginfunction = () =>
         ;
     }
 
-userexist = (_name,_username) =>
+
+async function userexist(_name,_username)
 {
+    var pass;
     return db.collection("User").where("Username","==",_username)
         .get()
         .then((querySnapshot) => {
             querySnapshot.forEach((doc) => {
-              return doc.Username == _username
+                //console.log(doc.data().Username)
+                pass = doc.data().Username
             }); 
         })
         .catch(function(error) {
             console.log("Error getting documents: ", error);
         })
-        //.finally(() => (this.loading=false)) //when the requests finish
+        .finally(() => {
+            console.log("finally : " + pass)
+            return pass;
+        }
+            ) //when the requests finish
         ;
+       
 }
+// userexist = (_name,_username) =>
+// {
+//     var pass;
+//     return db.collection("User").where("Username","==",_username)
+//         .get()
+//         .then((querySnapshot) => {
+//             querySnapshot.forEach((doc) => {
+//                 //console.log(doc.data().Username)
+//                 pass = doc.data().Username
+//             }); 
+//         })
+//         .catch(function(error) {
+//             console.log("Error getting documents: ", error);
+//         })
+//         .finally(() => {
+//             console.log("finally : " + pass)
+//             return pass;
+//         }
+//             ) //when the requests finish
+//         ;
+       
+// }
 //https://firebase.google.com/docs/firestore/quickstart#web_4
