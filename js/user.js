@@ -44,10 +44,10 @@ loginfunction = () =>
     }
 
 
-async function userexist(_name,_username)
+function userexist(_name,_username)
 {
     var pass;
-    return db.collection("User").where("Username","==",_username)
+    db.collection("User").where("Username","==",_username)
         .get()
         .then((querySnapshot) => {
             querySnapshot.forEach((doc) => {
